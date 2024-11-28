@@ -3,6 +3,8 @@ A memory management strategy more aggressive than Google Chrome's native memory 
 
 Users can configure related options in manager.toml, such as Chrome's maximum memory usage, the idle time threshold for removing tabs, and the memory management strategy to use. By setting these parameters, users can decide how the Google Chrome Memory Manager handles memory associated with tabs.
 
+![alt text](screenshoot/architecture.png "Optional Title")
+
 For tab memory management strategies, there are two approaches:
 
 RSS Limit Strategy
