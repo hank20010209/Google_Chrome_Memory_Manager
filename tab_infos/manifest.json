@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "tab-infos",
+  "version": "1.0",
+  "permissions": [
+    "tabs",
+    "processes"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
