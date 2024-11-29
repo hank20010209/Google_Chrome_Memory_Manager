@@ -12,7 +12,7 @@ clean:
 	@echo "Cleaning kernel module..."
 	@$(MAKE) -C kernel_module clean
 	@echo "Cleaning Rust build..."
-	@cargo clean
+	@cargo clean --manifest-path memory_management_for_chrome/Cargo.toml
 
 grafana:
 	sudo systemctl restart grafana-server
