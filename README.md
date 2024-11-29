@@ -13,6 +13,12 @@ When the memory usage reaches the user-specified rss_limit, the manager releases
 Idle Time Strategy
 Based on the user-defined idle time, the manager evaluates the memory usage changes of each tab. Tabs that show no significant memory usage variation within the idle_time and are not in the foreground are considered idle and have their resources released.
 
+## Dependencies
+
+- flask
+
+- jsonpath-ng
+
 ## Usage
 This project relies on a Google Chrome extension (Chrome must support manifestV3 and getProcessIdForTab) and a kernel module to gather process data related to Chrome.
 
