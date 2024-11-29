@@ -55,8 +55,11 @@ impl ServerManager {
         {
             let mut child_processes = child_processes.lock().unwrap();
             for mut child in child_processes.drain(..) {
-                let _ = child.kill();
-                eprintln!("Killed child process: {:?}", child.id());
+                let pid = child.id();
+                match child.kill() {
+                    Ok(_) => println!("Killed child process {}", pid),
+                    Err(error) => println!("Failed to kill child process {}, {}", pid, error),
+                }
             }
         }
     }

@@ -72,6 +72,7 @@ impl TabManager {
 
         println!("Find chrome_info and open successfully!");
         
+        // todo! Stuck if "/proc/chrome_info" cannot be read
         for line in BufReader::new(chrome_info_file).lines() {
             let line = line?;
             let mut pid: i32 = -1; 
