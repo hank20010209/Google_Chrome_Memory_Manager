@@ -1,17 +1,16 @@
-mod memory_manager;
-mod tab_manager;
-mod server_manager;
 mod config_manager;
+mod memory_manager;
+mod server_manager;
+mod tab_manager;
 
-use memory_manager::MemoryManager;
-use tab_manager::TabManager;
-use server_manager::ServerManager;
 use config_manager::ConfigManager;
+use memory_manager::MemoryManager;
+use server_manager::ServerManager;
+use tab_manager::TabManager;
 
 use std::path::Path;
 use std::thread;
 use std::time::Duration;
-
 
 fn main() -> std::io::Result<()> {
     let chrome_info_path = Path::new("/proc/chrome_info");
@@ -25,26 +24,38 @@ fn main() -> std::io::Result<()> {
     let strategy = config_manager.strategy;
     let mut memory_manager = MemoryManager::new(rss_limit, idel_time_limit);
     let server_manager = ServerManager::new();
-    
+
     server_manager.set_panic_hook();
     server_manager.set_signal_hook_handler();
-    server_manager.run_server_thread();
+    server_manager
+        .run_server_threads()
+        .expect("Failed to run server threads");
 
-    println!("\x1b[42mWaiting for servers to start..., using strategy: {}\x1b[0m", strategy);
+    println!(
+        "\x1b[42mWaiting for servers to start..., using strategy: {}\x1b[0m",
+        strategy
+    );
     thread::sleep(Duration::from_secs(15));
 
-    while !*server_manager.stop_signal.lock().unwrap() {
+    while !server_manager.should_stop() {
         manager.build_tab_info_map(log_path)?;
         manager.get_pid_from_chrome_info(chrome_info_path)?;
         manager.build_tab_process_info_map();
         manager.build_tabid_tabname_tabpid_isActive_map();
         manager.print_tab_process_info_map();
 
-        if let Err(err) = memory_manager.memory_killer(&manager.tabid_tabname_tabpid_isActive_map, reflush_time, &strategy) {
+        if let Err(err) = memory_manager.memory_killer(
+            &manager.tabid_tabname_tabpid_isActive_map,
+            reflush_time,
+            &strategy,
+        ) {
             eprintln!("Failed to enforce memory limit: {}", err);
         }
 
-        if let Err(e) = manager.write_tab_process_info_to_file("output.json", &memory_manager.pid_inActive_time_counter) {
+        if let Err(e) = manager.write_tab_process_info_to_file(
+            "output.json",
+            &memory_manager.pid_inActive_time_counter,
+        ) {
             eprintln!("Failed to write to file: {}", e);
         }
 

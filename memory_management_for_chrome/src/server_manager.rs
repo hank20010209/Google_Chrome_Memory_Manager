@@ -1,13 +1,13 @@
-use std::thread::JoinHandle;
 use ctrlc;
-use std::process::{Command, Child};
+use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::thread::JoinHandle;
 
 pub struct ServerManager {
-    pub threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
-    pub stop_signal: Arc<Mutex<bool>>,
-    pub child_processes: Arc<Mutex<Vec<Child>>>,
+    threads: Arc<Mutex<Vec<JoinHandle<()>>>>,
+    stop_signal: Arc<Mutex<bool>>,
+    child_processes: Arc<Mutex<Vec<Child>>>,
 }
 
 impl ServerManager {
@@ -19,10 +19,12 @@ impl ServerManager {
         }
     }
 
+    pub fn should_stop(&self) -> bool {
+        *self.stop_signal.lock().unwrap()
+    }
+
     pub fn start_python_script(&self, script_name: &str) -> std::io::Result<Child> {
-        Command::new("python3")
-            .arg(script_name)
-            .spawn()
+        Command::new("python3").arg(script_name).spawn()
     }
     // clear thread and process call by thread
     fn clean_up_internal(
@@ -43,7 +45,9 @@ impl ServerManager {
             }
 
             for thread in threads.drain(..) {
-                let _ = thread.join().unwrap_or_else(|_| eprintln!("Failed to join a thread"));
+                let _ = thread
+                    .join()
+                    .unwrap_or_else(|_| eprintln!("Failed to join a thread"));
             }
         }
 
@@ -51,8 +55,11 @@ impl ServerManager {
         {
             let mut child_processes = child_processes.lock().unwrap();
             for mut child in child_processes.drain(..) {
-                let _ = child.kill();
-                eprintln!("Killed child process: {:?}", child.id());
+                let pid = child.id();
+                match child.kill() {
+                    Ok(_) => println!("Killed child process {}", pid),
+                    Err(error) => println!("Failed to kill child process {}, {}", pid, error),
+                }
             }
         }
     }
@@ -68,7 +75,7 @@ impl ServerManager {
         let threads = Arc::clone(&self.threads);
         let stop_signal = Arc::clone(&self.stop_signal);
         let child_processes = Arc::clone(&self.child_processes);
-    
+
         std::panic::set_hook(Box::new(move |info| {
             println!("Panic occurred: {:?}", info);
             ServerManager::clean_up_internal(&threads, &stop_signal, &child_processes);
@@ -76,13 +83,16 @@ impl ServerManager {
         }));
     }
 
-    pub fn run_server_thread(&self) -> std::io::Result<()> {
+    pub fn run_server_threads(&self) -> std::io::Result<()> {
         let tab_info_server_thread = {
             let threads = self.threads.clone();
             let child = self.start_python_script("../tab_info_server/server.py")?;
             self.child_processes.lock().unwrap().push(child);
             thread::spawn(move || {
-                threads.lock().unwrap().retain(|t| t.thread().id() != thread::current().id());
+                threads
+                    .lock()
+                    .unwrap()
+                    .retain(|t| t.thread().id() != thread::current().id());
             })
         };
 
@@ -91,7 +101,10 @@ impl ServerManager {
             let child = self.start_python_script("../grafana/server.py")?;
             self.child_processes.lock().unwrap().push(child);
             thread::spawn(move || {
-                threads.lock().unwrap().retain(|t| t.thread().id() != thread::current().id());
+                threads
+                    .lock()
+                    .unwrap()
+                    .retain(|t| t.thread().id() != thread::current().id());
             })
         };
 
@@ -111,13 +124,16 @@ impl ServerManager {
             println!("Received termination signal. Cleaning up...");
             ServerManager::clean_up_internal(&threads, &stop_signal, &child_processes);
             println!("Cleanup completed after termination signal.");
-        }).expect("Failed to set Ctrl+C handler");
+        })
+        .expect("Failed to set Ctrl+C handler");
     }
 
     pub fn cleanup_thread(&self) {
         let mut threads = self.threads.lock().unwrap();
         for thread in threads.drain(..) {
-            thread.join().unwrap_or_else(|_| eprintln!("Failed to join a thread"));
+            thread
+                .join()
+                .unwrap_or_else(|_| eprintln!("Failed to join a thread"));
         }
     }
 
