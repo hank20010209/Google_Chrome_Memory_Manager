@@ -13,6 +13,9 @@ When the memory usage reaches the user-specified rss_limit, the manager releases
 Idle Time Strategy
 Based on the user-defined idle time, the manager evaluates the memory usage changes of each tab. Tabs that show no significant memory usage variation within the idle_time and are not in the foreground are considered idle and have their resources released.
 
+Memory Change Rate Strategy
+Determine whether the page is an idle page based on the change amount of the paging memory within the specified time, and the idle page will be released.
+
 ## Usage
 This project relies on a Google Chrome extension (Chrome must support manifestV3 and getProcessIdForTab) and a kernel module to gather process data related to Chrome.
 
