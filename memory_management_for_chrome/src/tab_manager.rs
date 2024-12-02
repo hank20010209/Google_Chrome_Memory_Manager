@@ -31,7 +31,7 @@ impl TabManager {
         let mut reader = BufReader::new(log_file);
         let mut content = String::new();
 
-        println!("Find log.json and open successfully!");
+        // println!("Find log.json and open successfully!");
         reader.read_to_string(&mut content)?;
         let parsed = json::parse(&content).expect("Failed to parse JSON");
         self.traverse_json(&parsed);
@@ -70,7 +70,7 @@ impl TabManager {
             panic!("Cannot proceed without the file! Please load the kernel module first");
         });
 
-        println!("Find chrome_info and open successfully!");
+        // println!("Find chrome_info and open successfully!");
         
         for line in BufReader::new(chrome_info_file).lines() {
             let line = line?;

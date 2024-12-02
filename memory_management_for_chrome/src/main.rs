@@ -19,18 +19,14 @@ fn main() -> std::io::Result<()> {
     let config_path = Path::new("manager.toml");
     let mut manager = TabManager::new();
     let config_manager = ConfigManager::new(config_path);
-    let rss_limit = config_manager.rss_limit;
-    let idel_time_limit = config_manager.idel_time_limit;
-    let reflush_time = config_manager.reflush_time;
-    let strategy = config_manager.strategy;
-    let mut memory_manager = MemoryManager::new(rss_limit, idel_time_limit);
+    let mut memory_manager = MemoryManager::new(config_manager.rss_limit, config_manager.idel_time_limit,config_manager.memory_change_rate);
     let server_manager = ServerManager::new();
     
     server_manager.set_panic_hook();
     server_manager.set_signal_hook_handler();
     server_manager.run_server_thread();
 
-    println!("\x1b[42mWaiting for servers to start..., using strategy: {}\x1b[0m", strategy);
+    println!("\x1b[42mWaiting for servers to start..., using strategy: {}\x1b[0m", config_manager.strategy);
     thread::sleep(Duration::from_secs(15));
 
     while !*server_manager.stop_signal.lock().unwrap() {
@@ -40,7 +36,7 @@ fn main() -> std::io::Result<()> {
         manager.build_tabid_tabname_tabpid_isActive_map();
         manager.print_tab_process_info_map();
 
-        if let Err(err) = memory_manager.memory_killer(&manager.tabid_tabname_tabpid_isActive_map, reflush_time, &strategy) {
+        if let Err(err) = memory_manager.memory_killer(&manager.tabid_tabname_tabpid_isActive_map, config_manager.reflush_time, &config_manager.strategy) {
             eprintln!("Failed to enforce memory limit: {}", err);
         }
 
@@ -53,7 +49,8 @@ fn main() -> std::io::Result<()> {
         manager.tab_process_info_map.clear();
         manager.tabid_tabname_tabpid_isActive_map.clear();
 
-        thread::sleep(Duration::from_secs(reflush_time));
+        thread::sleep(Duration::from_secs(config_manager.reflush_time));
+        
     }
 
     println!("Shutting down...");
