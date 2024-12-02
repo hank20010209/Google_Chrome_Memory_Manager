@@ -49,7 +49,7 @@ void scan_chrome_processes(struct timer_list *t) {
     chrome_info[BUFFER_SIZE - 1] = '\0';
 
     // Restart the timer for the next scan
-    mod_timer(&chrome_timer, jiffies + msecs_to_jiffies(10000));
+    mod_timer(&chrome_timer, jiffies + msecs_to_jiffies(3000));
 }
 
 ssize_t chrome_info_read(struct file *file, char __user *buf, size_t count, loff_t *offset) {
@@ -68,7 +68,7 @@ static int __init chrome_proc_init(void) {
 
     // Initialize and start the timer
     timer_setup(&chrome_timer, scan_chrome_processes, 0);
-    mod_timer(&chrome_timer, jiffies + msecs_to_jiffies(5000));
+    mod_timer(&chrome_timer, jiffies + msecs_to_jiffies(3000));
 
     printk(KERN_INFO "Chrome process lister module loaded.\n");
     return 0;
