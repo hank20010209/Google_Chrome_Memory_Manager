@@ -8,7 +8,7 @@ app = Flask(__name__)
 LOG_FILE = os.getcwd() + "/.." + "/memory_management_for_chrome/" + "output.json"
 
 def read_log_file():
-    print("Grafana: {}\n", LOG_FILE)
+    # print("Grafana: {}\n", LOG_FILE)
     if not os.path.exists(LOG_FILE):
         return {"error": "log.json file not found"}
     try:

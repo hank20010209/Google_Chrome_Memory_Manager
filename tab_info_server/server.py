@@ -17,7 +17,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
             try:
                 tabs_data = json.loads(post_data)
-                print("Received tab info:", tabs_data)
+                # print("Received tab info:", tabs_data)
                 
                 with open("log.json", "w") as file:
                     file.write(json.dumps(tabs_data, indent=4))
